@@ -14,7 +14,7 @@ from PySide6.QtCore import Qt, QDate, QTime
 from PySide6.QtGui import QPainter, QPen, QColor
 
 from ..models.seat import Seat
-from ..models.user import RegularMember
+from ..models.user import RegularMember, VIPMember
 from ..services.booking_service import BookingService
 from ..repositories.seat_repository import SeatRepository
 
@@ -116,6 +116,7 @@ class MainWindow(QMainWindow):
             "seat": None,
             "name": "",
             "phone": "",
+            "memberType": "regular",
             "paymentMethod": "qrcode",
         }
 
@@ -268,6 +269,24 @@ class MainWindow(QMainWindow):
         sec3 = QVBoxLayout()
         sec3.setSpacing(16)
         sec3.addWidget(QLabel("3. ข้อมูลของคุณ"))
+        sec3.addWidget(QLabel("ประเภทสมาชิก"))
+        member_row = QHBoxLayout()
+        self.btn_member_regular = QPushButton("👤 สมาชิกทั่วไป")
+        self.btn_member_regular.setCheckable(True)
+        self.btn_member_regular.setChecked(True)
+        self.btn_member_regular.setProperty("class", "toggle-btn")
+        self.btn_member_regular.setFixedHeight(56)
+        self.btn_member_vip = QPushButton("👑 VIP (ส่วนลด 15%)")
+        self.btn_member_vip.setCheckable(True)
+        self.btn_member_vip.setProperty("class", "toggle-btn")
+        self.btn_member_vip.setFixedHeight(56)
+        self.member_group = QButtonGroup(self)
+        self.member_group.addButton(self.btn_member_regular)
+        self.member_group.addButton(self.btn_member_vip)
+        self.member_group.buttonClicked.connect(self._on_member_changed)
+        member_row.addWidget(self.btn_member_regular)
+        member_row.addWidget(self.btn_member_vip)
+        sec3.addLayout(member_row)
         self.inp_name = QLineEdit()
         self.inp_name.setPlaceholderText("ชื่อ - นามสกุล")
         self.inp_name.setFixedHeight(56)
@@ -296,12 +315,14 @@ class MainWindow(QMainWindow):
         self.lbl_sum_type = QLabel("จองตอนนี้")
         self.lbl_sum_zone = QLabel("-")
         self.lbl_sum_seat = QLabel("ยังไม่ได้เลือก")
+        self.lbl_sum_member = QLabel("สมาชิกทั่วไป")
         self.lbl_sum_date = QLabel("-")
         self.lbl_sum_time = QLabel("-")
         self.lbl_sum_duration = QLabel("3 ชม.")
         sum_layout.addLayout(self._row("ประเภทการจอง", self.lbl_sum_type))
         sum_layout.addLayout(self._row("โซนที่นั่ง", self.lbl_sum_zone))
         sum_layout.addLayout(self._row("หมายเลขเครื่อง", self.lbl_sum_seat))
+        sum_layout.addLayout(self._row("ประเภทสมาชิก", self.lbl_sum_member))
         self.datetime_summary = QWidget()
         dt_sum_layout = QVBoxLayout(self.datetime_summary)
         dt_sum_layout.setContentsMargins(0, 0, 0, 0)
@@ -480,6 +501,10 @@ class MainWindow(QMainWindow):
         self.state["paymentMethod"] = "qrcode" if btn == self.btn_qr else "counter"
         self._update_summary()
 
+    def _on_member_changed(self, btn):
+        self.state["memberType"] = "vip" if btn == self.btn_member_vip else "regular"
+        self._update_summary()
+
     def _on_zone_changed(self, btn):
         zone_id = btn.property("zone_id")
         zone = next((z for z in ZONES if z["id"] == zone_id), None)
@@ -514,6 +539,7 @@ class MainWindow(QMainWindow):
         self.lbl_sum_type.setText("จองตอนนี้" if s["type"] == "now" else "จองล่วงหน้า")
         self.lbl_sum_zone.setText(s["zone"]["title"] if s["zone"] else "-")
         self.lbl_sum_seat.setText(f"เครื่อง {s['seat'].seat_id}" if s["seat"] else "ยังไม่ได้เลือก")
+        self.lbl_sum_member.setText("VIP (ส่วนลด 15%)" if s.get("memberType") == "vip" else "สมาชิกทั่วไป")
         self.lbl_sum_date.setText(s["date"].toString("dd/MM/yyyy") if s["type"] == "advance" else "-")
         self.lbl_sum_time.setText(f"{s['time'].toString('HH:mm')} น." if s["type"] == "advance" else "-")
         self.lbl_sum_duration.setText(f"{s['duration']} ชม.")
@@ -522,8 +548,8 @@ class MainWindow(QMainWindow):
         price = 0
         if s["zone"] and s["seat"] and s["duration"]:
             try:
-                # ใช้ชื่อ/เบอร์ชั่วคราวสำหรับคำนวณราคาเท่านั้น
-                tmp_user = RegularMember("ลูกค้า", "0000000000", "W000")
+                tmp_user = (VIPMember("ลูกค้า", "0000000000", "V001") if s.get("memberType") == "vip"
+                            else RegularMember("ลูกค้า", "0000000000", "W000"))
                 price = self.booking_service.calculate_price(s["seat"], s["duration"], tmp_user)
             except ValueError:
                 price = 0
@@ -560,7 +586,8 @@ class MainWindow(QMainWindow):
         name = s["name"].strip()
         phone = s["phone"].strip()
         try:
-            user = RegularMember(name, phone, "W001")
+            user = (VIPMember(name, phone, "V001") if s.get("memberType") == "vip"
+                    else RegularMember(name, phone, "W001"))
             booking = self.booking_service.create_booking(user, s["seat"], s["duration"])
         except ValueError as e:
             QMessageBox.warning(self, "เกิดข้อผิดพลาด", str(e))
@@ -630,9 +657,10 @@ class MainWindow(QMainWindow):
     def _reset_booking(self):
         self.state = {
             "type": "now", "date": QDate.currentDate(), "time": QTime.currentTime(),
-            "duration": 3, "zone": None, "seat": None, "name": "", "phone": "", "paymentMethod": "qrcode",
+            "duration": 3, "zone": None, "seat": None, "name": "", "phone": "", "memberType": "regular", "paymentMethod": "qrcode",
         }
         self.btn_now.setChecked(True)
+        self.btn_member_regular.setChecked(True)
         self._on_type_changed(self.btn_now)
         self.date_edit.setDate(self.state["date"])
         self.time_edit.setTime(self.state["time"])
