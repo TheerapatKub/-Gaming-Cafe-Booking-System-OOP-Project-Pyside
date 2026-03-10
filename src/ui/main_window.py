@@ -14,14 +14,14 @@ from PySide6.QtCore import Qt, QDate, QTime
 from PySide6.QtGui import QPainter, QPen, QColor
 
 from ..models.seat import Seat
-from ..models.user import RegularMember
+from ..models.user import Customer
 from ..services.booking_service import BookingService
 from ..repositories.seat_repository import SeatRepository
 
 ZONES = [
     {"id": "standard", "title": "Standard", "price": 40, "desc": "จอ 144Hz / การ์ดจอ RTX 3060", "seat_type": "StandardSeat"},
     {"id": "premium", "title": "Premium", "price": 80, "desc": "จอ 240Hz / การ์ดจอ RTX 4070", "seat_type": "PremiumSeat"},
-    {"id": "vip", "title": "Private Room", "price": 250, "desc": "ห้องส่วนตัว / จอคู่ 360Hz", "seat_type": "VRSeat"},
+    {"id": "privateroom", "title": "Private Room", "price": 250, "desc": "ห้องส่วนตัว / จอคู่ 360Hz", "seat_type": "PrivateRoomSeat"},
 ]
 
 STYLE_SHEET = """
@@ -522,7 +522,7 @@ class MainWindow(QMainWindow):
         price = 0
         if s["zone"] and s["seat"] and s["duration"]:
             try:
-                tmp_user = RegularMember("ลูกค้า", "0000000000", "W000")
+                tmp_user = Customer("ลูกค้า", "0000000000", "C000")
                 price = self.booking_service.calculate_price(s["seat"], s["duration"], tmp_user)
             except ValueError:
                 price = 0
@@ -559,7 +559,7 @@ class MainWindow(QMainWindow):
         name = s["name"].strip()
         phone = s["phone"].strip()
         try:
-            user = RegularMember(name, phone, "W001")
+            user = Customer(name, phone, "C001")
             booking = self.booking_service.create_booking(user, s["seat"], s["duration"])
         except ValueError as e:
             QMessageBox.warning(self, "เกิดข้อผิดพลาด", str(e))

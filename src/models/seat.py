@@ -65,7 +65,7 @@ class PremiumSeat(Seat):
         return 80.0
 
 
-class VRSeat(Seat):
-    """Inheritance - ห้อง Private Room 250 บาท/ชม."""
+class PrivateRoomSeat(Seat):
+    """Inheritance - ห้องส่วนตัว Private Room 250 บาท/ชม. (ไม่ใช่ VR)"""
     def get_base_price_per_hour(self) -> float:
         return 250.0

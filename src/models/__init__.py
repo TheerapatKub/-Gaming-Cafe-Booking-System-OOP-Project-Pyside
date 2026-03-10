@@ -1,10 +1,10 @@
 """Models module - OOP: Inheritance, Encapsulation, Composition"""
-from .user import User, RegularMember, VIPMember
-from .seat import Seat, SeatStatus, StandardSeat, PremiumSeat, VRSeat
+from .user import User, Customer
+from .seat import Seat, SeatStatus, StandardSeat, PremiumSeat, PrivateRoomSeat
 from .booking import Booking
 
 __all__ = [
-    "User", "RegularMember", "VIPMember",
-    "Seat", "SeatStatus", "StandardSeat", "PremiumSeat", "VRSeat",
+    "User", "Customer",
+    "Seat", "SeatStatus", "StandardSeat", "PremiumSeat", "PrivateRoomSeat",
     "Booking",
 ]
