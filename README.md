@@ -39,7 +39,22 @@
 
 ---
 
-## 📦 การติดตั้งและใช้งาน
+## 📦 Requirements (Library ที่เกี่ยวข้อง)
+
+ติดตั้งได้จาก `requirements.txt` หรือ `pyproject.toml`
+
+| Library | เวอร์ชัน | ใช้สำหรับ |
+|---------|----------|-----------|
+| **PySide6** | >= 6.5.0 | Desktop GUI (Qt for Python) |
+
+```txt
+# requirements.txt
+PySide6>=6.5.0
+```
+
+---
+
+## ⚙️ การติดตั้งและใช้งาน
 
 ### วิธีที่ 1: ใช้ pip
 
