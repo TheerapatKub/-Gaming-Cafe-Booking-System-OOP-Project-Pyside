@@ -55,7 +55,7 @@ PySide6>=6.5.0
 
 ## ⚙️ การติดตั้งและใช้งาน
 
-### วิธีที่ 1: ใช้ pip
+### การติดตั้ง
 
 ```bash
 # 1️⃣ Clone repository
@@ -71,13 +71,6 @@ venv\Scripts\activate   # Windows
 pip install -r requirements.txt
 
 # 4️⃣ รันโปรแกรม
-python main.py
-```
-
-### วิธีที่ 2: ใช้ pyproject.toml
-
-```bash
-pip install .
 python main.py
 ```
 
